@@ -2,7 +2,8 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>JavaScript 貪食蛇</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JavaScript 貪食蛇 (手機相容)</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -10,13 +11,17 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            min-height: 100vh;
+            /* 確保內容在小螢幕上可以捲動 */
+            min-height: 100vh; 
             background-color: #282c34;
             color: white;
             margin: 0;
+            padding: 20px 0; /* 增加一些內邊距 */
         }
         #game-container {
             text-align: center;
+            /* 讓手機螢幕不會被遊戲板過度撐開 */
+            max-width: 100%; 
         }
         #score-display {
             font-size: 1.5em;
@@ -26,7 +31,47 @@
             border: 5px solid #61dafb;
             background-color: #383c47;
             box-shadow: 0 0 20px rgba(97, 218, 251, 0.5);
+            /* 讓 Canvas 在小螢幕上縮小 */
+            max-width: 100%; 
+            height: auto;
         }
+        
+        /* --- 手機控制按鈕樣式 --- */
+        #mobile-controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+            /* 確保控制區塊不會超過螢幕寬度 */
+            max-width: 300px; 
+        }
+
+        .horizontal-controls {
+            display: flex;
+            justify-content: space-between;
+            width: 150px; /* 控制左右按鈕之間的間距 */
+            margin: 5px 0;
+        }
+
+        #mobile-controls button {
+            width: 50px;
+            height: 50px;
+            font-size: 1.5em;
+            font-weight: bold;
+            background-color: #61dafb;
+            color: #282c34;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            user-select: none; 
+            touch-action: manipulation; 
+            transition: background-color 0.1s;
+        }
+
+        #mobile-controls button:active {
+            background-color: #4ac7e0;
+        }
+
         #instructions {
             margin-top: 20px;
             font-size: 1em;
@@ -39,11 +84,21 @@
     <div id="game-container">
         <h1>🐍 JavaScript 貪食蛇 </h1>
         <div id="score-display">分數: 0</div>
+        
         <canvas id="game-canvas" width="400" height="400"></canvas>
+
+        <div id="mobile-controls">
+            <button id="up-btn">↑</button>
+            <div class="horizontal-controls">
+                <button id="left-btn">←</button>
+                <div style="width: 50px; height: 50px;"></div> <button id="right-btn">→</button>
+            </div>
+            <button id="down-btn">↓</button>
+        </div>
+        
         <div id="instructions">
-            使用鍵盤 **方向鍵 (↑ ↓ ← →)** 控制。
-            <br>
-            **點擊遊戲畫面或按任意方向鍵開始。**
+            電腦使用鍵盤 **方向鍵 (↑ ↓ ← →)** 控制。<br>
+            手機使用 **螢幕按鈕** 控制。
         </div>
     </div>
 
@@ -53,18 +108,17 @@
         const CTX = CANVAS.getContext('2d');
         const SCORE_DISPLAY = document.getElementById('score-display');
         
-        const UNIT_SIZE = 20; // 每個格子的大小 (像素)
-        const GRID_COUNT = CANVAS.width / UNIT_SIZE; // 網格數量 (20x20)
-        let gameLoopInterval; // 儲存遊戲循環的計時器
+        const UNIT_SIZE = 20; 
+        let gameLoopInterval; 
         let gameRunning = false;
         
         // --- 遊戲狀態 ---
         let snake = [];
         let food = {};
-        let dx = UNIT_SIZE; // x 軸方向的移動量
-        let dy = 0; // y 軸方向的移動量
+        let dx = UNIT_SIZE; 
+        let dy = 0; 
         let score = 0;
-        let changingDirection = false; // 用於防止玩家一次按兩次鍵造成錯誤
+        let changingDirection = false; 
 
         // --- 核心函數 ---
 
@@ -86,7 +140,6 @@
         function generateFood() {
             // 隨機生成食物的 x, y 座標
             function randomCoord(min, max) {
-                // 確保座標是單位的倍數 (例如 0, 20, 40...)
                 return Math.round((Math.random() * (max - min) + min) / UNIT_SIZE) * UNIT_SIZE;
             }
 
@@ -124,21 +177,18 @@
         }
 
         function moveSnake() {
-            // 創建新蛇頭 (基於當前方向 dx, dy)
+            // 創建新蛇頭
             const head = {x: snake[0].x + dx, y: snake[0].y + dy};
 
-            // 將新蛇頭加到蛇列表的最前面
             snake.unshift(head);
 
             // 檢查是否吃到食物
             if (head.x === food.x && head.y === food.y) {
-                // 吃到食物，增加分數，不移除尾巴 (蛇變長)
                 score += 10;
                 SCORE_DISPLAY.textContent = `分數: ${score}`;
-                generateFood(); // 生成新的食物
+                generateFood(); 
             } else {
-                // 沒吃到食物，移除尾巴 (保持長度不變)
-                snake.pop();
+                snake.pop(); // 沒吃到食物，移除尾巴
             }
         }
 
@@ -146,14 +196,9 @@
             const head = snake[0];
 
             // 1. 撞到牆壁
-            const hitLeftWall = head.x < 0;
-            const hitRightWall = head.x >= CANVAS.width;
-            const hitTopWall = head.y < 0;
-            const hitBottomWall = head.y >= CANVAS.height;
+            const hitWall = head.x < 0 || head.x >= CANVAS.width || head.y < 0 || head.y >= CANVAS.height;
 
-            if (hitLeftWall || hitRightWall || hitTopWall || hitBottomWall) {
-                return true;
-            }
+            if (hitWall) return true;
 
             // 2. 撞到自己
             for (let i = 1; i < snake.length; i++) {
@@ -171,8 +216,7 @@
                 return;
             }
 
-            changingDirection = false; // 允許下次按鍵輸入
-
+            changingDirection = false; 
             moveSnake();
             drawGame();
         }
@@ -181,7 +225,6 @@
             if (gameRunning) return;
             gameRunning = true;
             initGame();
-            // 遊戲循環，每 100 毫秒 (0.1 秒) 呼叫一次 mainLoop
             gameLoopInterval = setInterval(mainLoop, 100);
         }
 
@@ -194,21 +237,20 @@
             CTX.font = '30px Arial';
             CTX.fillText('遊戲結束!', CANVAS.width / 2 - 80, CANVAS.height / 2 - 20);
             CTX.font = '20px Arial';
-            CTX.fillText('請按任意方向鍵重新開始', CANVAS.width / 2 - 120, CANVAS.height / 2 + 20);
+            CTX.fillText('請按任意方向鍵或螢幕按鈕重新開始', CANVAS.width / 2 - 160, CANVAS.height / 2 + 20);
         }
 
-        // --- 處理使用者輸入 ---
+        // --- 處理使用者輸入 (鍵盤和按鈕通用) ---
 
         document.addEventListener('keydown', changeDirection);
 
         function changeDirection(event) {
             const key = event.key;
             
-            // 檢查是否正在改變方向，防止快速雙擊
             if (changingDirection) return;
             changingDirection = true;
 
-            // 如果遊戲尚未開始，按任意方向鍵啟動遊戲
+            // 如果遊戲尚未開始，按任意方向鍵或按鈕觸發開始
             if (!gameRunning && ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(key)) {
                 startGame();
             }
@@ -218,7 +260,6 @@
             const LEFT = dx === -UNIT_SIZE;
             const RIGHT = dx === UNIT_SIZE;
 
-            // 根據按鍵設定新的移動量 (dx, dy)，並防止立即反向移動
             if (key === 'ArrowLeft' && !RIGHT) {
                 dx = -UNIT_SIZE;
                 dy = 0;
@@ -234,9 +275,30 @@
             }
         }
         
+        // --- 綁定手機按鈕事件 ---
+        function bindMobileControls() {
+            const upBtn = document.getElementById('up-btn');
+            const downBtn = document.getElementById('down-btn');
+            const leftBtn = document.getElementById('left-btn');
+            const rightBtn = document.getElementById('right-btn');
+
+            // 模擬鍵盤事件，傳遞給 changeDirection 函數
+            function simulateKey(keyName) {
+                const fakeEvent = { key: keyName };
+                changeDirection(fakeEvent);
+            }
+            
+            // 綁定點擊事件
+            upBtn.addEventListener('click', () => simulateKey('ArrowUp'));
+            downBtn.addEventListener('click', () => simulateKey('ArrowDown'));
+            leftBtn.addEventListener('click', () => simulateKey('ArrowLeft'));
+            rightBtn.addEventListener('click', () => simulateKey('ArrowRight'));
+        }
+
         // --- 初始啟動 ---
         initGame();
-        endGame(); // 預設先進入遊戲結束狀態，等待按鍵啟動
+        bindMobileControls();
+        endGame(); 
         
     </script>
 
